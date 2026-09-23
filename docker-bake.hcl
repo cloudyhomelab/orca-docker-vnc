@@ -14,6 +14,10 @@ variable "REVISION" { default = "" }
 # without a default. Orca ships amd64 and arm64 .debs under one release tag.
 variable "ORCA_VERSION" { default = "1.4.209" }
 
+# The agent CLIs installed beside Orca.
+variable "CLAUDE_VERSION" { default = "2.1.280" }
+variable "CODEX_VERSION" { default = "0.156.1" }
+
 variable "LOCAL" { default = true }
 
 group "default" {
@@ -37,7 +41,9 @@ target "orca" {
   }
 
   args = {
-    ORCA_VERSION = ORCA_VERSION
+    ORCA_VERSION   = ORCA_VERSION
+    CLAUDE_VERSION = CLAUDE_VERSION
+    CODEX_VERSION  = CODEX_VERSION
   }
 
   tags = [
