@@ -18,6 +18,9 @@ variable "ORCA_VERSION" { default = "1.4.209" }
 variable "CLAUDE_VERSION" { default = "2.1.280" }
 variable "CODEX_VERSION" { default = "0.156.1" }
 
+# GitHub CLI from its release .deb; Debian's package lags upstream by a year or more.
+variable "GH_VERSION" { default = "2.101.0" }
+
 variable "LOCAL" { default = true }
 
 group "default" {
@@ -44,6 +47,7 @@ target "orca" {
     ORCA_VERSION   = ORCA_VERSION
     CLAUDE_VERSION = CLAUDE_VERSION
     CODEX_VERSION  = CODEX_VERSION
+    GH_VERSION     = GH_VERSION
   }
 
   tags = [

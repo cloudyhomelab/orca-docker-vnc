@@ -6,15 +6,19 @@ FROM debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee
 ARG ORCA_VERSION
 ARG CLAUDE_VERSION
 ARG CODEX_VERSION
+ARG GH_VERSION
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       cage wayvnc wlr-randr novnc websockify fonts-dejavu-core ca-certificates curl git nodejs npm \
       libgbm1 libasound2t64 \
+ && arch="$(dpkg --print-architecture)" \
  && curl -fsSL -o /tmp/orca.deb \
-      "https://github.com/stablyai/orca/releases/download/v${ORCA_VERSION}/orca-ide_${ORCA_VERSION}_$(dpkg --print-architecture).deb" \
- && apt-get install -y --no-install-recommends /tmp/orca.deb \
- && rm -f /tmp/orca.deb \
+      "https://github.com/stablyai/orca/releases/download/v${ORCA_VERSION}/orca-ide_${ORCA_VERSION}_${arch}.deb" \
+ && curl -fsSL -o /tmp/gh.deb \
+      "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${arch}.deb" \
+ && apt-get install -y --no-install-recommends /tmp/orca.deb /tmp/gh.deb \
+ && rm -f /tmp/orca.deb /tmp/gh.deb \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --create-home --uid 1000 orca \
  && install -d -m 700 -o orca -g orca /run/user/1000

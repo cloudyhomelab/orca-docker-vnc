@@ -107,6 +107,7 @@ versions() {
   echo "| orca-ide | $(versions orca-ide --version) |"
   echo "| claude | $(versions claude --version) |"
   echo "| codex | $(versions codex --version) |"
+  echo "| gh | $(versions gh --version) |"
   echo "| cage | $(versions cage -v) |"
   echo "| wayvnc | $(versions wayvnc --version) |"
   echo "| websockify | $(versions python3 -c 'import websockify; print(websockify.__version__)') |"
