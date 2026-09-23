@@ -61,7 +61,8 @@ web=$(docker port "${cid}" 6080/tcp | head -n1)
 vnc=$(docker port "${cid}" 5900/tcp | head -n1)
 
 deadline=$((SECONDS + TIMEOUT))
-until curl -fsS -o /dev/null "http://${web}/vnc.html"; do
+# Quiet: a reset while websockify is still binding is expected noise.
+until curl -fso /dev/null "http://${web}/vnc.html"; do
   running || fail "container exited before noVNC answered"
   ((SECONDS < deadline)) || fail "noVNC did not answer within ${TIMEOUT}s"
   sleep 2
@@ -75,7 +76,8 @@ exec 3>&-
 [[ ${banner} == RFB* ]] || fail "VNC port did not answer with an RFB banner: '${banner}'"
 echo "wayvnc - ok (${banner})" >&2
 
-until docker top "${cid}" -o args | grep -q '^/opt/Orca/orca-ide'; do
+# docker top needs a pid column in the ps format it is handed.
+until docker top "${cid}" -o pid,args | grep -qE '^ *[0-9]+ +/opt/Orca/orca-ide( |$)'; do
   running || fail "container exited before Orca started"
   ((SECONDS < deadline)) || fail "Orca process did not appear within ${TIMEOUT}s"
   sleep 2
