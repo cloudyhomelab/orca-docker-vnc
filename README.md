@@ -28,6 +28,6 @@ Git identity: `GIT_USER_NAME` and `GIT_USER_EMAIL`, read by compose from `.env` 
     GIT_USER_NAME=Jane Doe
     GIT_USER_EMAIL=jane@example.com
 
-Orca state lives in the `orca-home` volume, including the Claude Code and Codex logins. Both CLIs are installed in the image; their versions are `CLAUDE_VERSION` and `CODEX_VERSION` in `docker-bake.hcl`.
+Orca state lives in the `orca-home` volume, including the Claude Code and Codex logins. Both CLIs and the GitHub CLI are installed in the image; their versions are `CLAUDE_VERSION`, `CODEX_VERSION` and `GH_VERSION` in `docker-bake.hcl`.
 
 Quitting Orca ends `cage`, and the container exits; `docker compose up` starts it again.
