@@ -1,0 +1,108 @@
+name: verify pull request
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: lint the dockerfile
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: Dockerfile
+          config: .hadolint.yaml
+
+      - name: lint the shell scripts
+        run: shellcheck orca-kiosk.sh .github/scripts/*.sh
+
+  # One native build per published platform. The publish workflow builds arm64
+  # under emulation and pushes it untested, so this is the only place an
+  # arm64-only fault can be caught before it reaches :latest. Waits for lint as
+  # well, so code the linters reject is never built.
+  build:
+    needs:
+      - lint
+
+    strategy:
+      # A fault in one platform should leave the other's result visible, so
+      # the failure can be read as platform-specific or not.
+      fail-fast: false
+      matrix:
+        include:
+          - platform: amd64
+            runs-on: ubuntu-latest
+          - platform: arm64
+            runs-on: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runs-on }}
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+        with:
+          driver: docker-container
+
+      # push is false, and LOCAL keeps the build to the host platform, which is
+      # also what lets load work: the docker-container driver discards a build
+      # that is neither pushed nor loaded, and a multi-platform one cannot be
+      # loaded at all. Reads main's cache but writes none: a pull request's
+      # cache is scoped to its own branch, so writing it would only burn quota.
+      - name: build without publishing
+        uses: docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b # v7.3.0
+        env:
+          LOCAL: true
+        with:
+          targets: orca
+          push: false
+          load: true
+          set: |
+            orca.cache-from=type=gha,scope=orca
+
+      - name: smoke test the built image
+        run: .github/scripts/smoke-test.sh orca
+
+  # The required status check. It always runs and reports, because a skipped
+  # job never reports a status and would leave every pull request waiting
+  # forever; a failed or cancelled job anywhere above is not a pass.
+  verify:
+    needs:
+      - lint
+      - build
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    permissions: {}
+
+    steps:
+      - name: check the results
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          set -euo pipefail
+          echo "${RESULTS}"
+          if grep -q -E '"(failure|cancelled)"' <<< "${RESULTS}"; then
+            exit 1
+          fi

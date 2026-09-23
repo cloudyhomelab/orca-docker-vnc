@@ -1,0 +1,6 @@
+---
+ignored:
+  # Debian drops superseded binaries from the archive, so a pinned apt version
+  # stops installing altogether once a point release lands. Orca itself is
+  # pinned through ORCA_VERSION in docker-bake.hcl.
+  - DL3008

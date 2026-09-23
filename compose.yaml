@@ -1,0 +1,27 @@
+services:
+  orca:
+    image: docker.io/binarycodes/orca:latest
+    init: true
+    # Chromium keeps renderer buffers in /dev/shm; Docker's 64 MB default is too small.
+    shm_size: 1g
+    ports:
+      # noVNC in the browser, reachable from anywhere; no auth, so firewall it or front it with TLS.
+      - "6080:6080"
+      # Raw VNC for native clients, loopback only.
+      - "127.0.0.1:5901:5900"
+    environment:
+      ORCA_RESOLUTION: 1920x1080
+      # Git identity for commits made inside Orca; set in .env or the shell.
+      GIT_USER_NAME: ${GIT_USER_NAME:-}
+      GIT_USER_EMAIL: ${GIT_USER_EMAIL:-}
+    volumes:
+      # Orca state: projects, agent logins, window layout.
+      - orca-home:/home/orca
+    # GPU rendering instead of pixman: uncomment, and drop --disable-gpu in orca-kiosk.sh.
+    # devices:
+    #   - /dev/dri/renderD128
+    # environment:
+    #   WLR_RENDERER: gles2
+
+volumes:
+  orca-home:
