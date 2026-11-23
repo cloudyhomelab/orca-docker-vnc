@@ -1,5 +1,5 @@
 # Pinned by digest so a rebuild gets the same base; Dependabot moves the digest when the tag does.
-FROM debian:trixie-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
+FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 
 # Orca is an Electron app shipped as a glibc .deb; Alpine/musl cannot run it.
 # No defaults: docker-bake.hcl is the pin.
